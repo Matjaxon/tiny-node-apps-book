@@ -1,6 +1,18 @@
-import { writeFileSync } from 'fs';
-import { createInterface } from 'readline';
+// import { writeFileSync } from 'fs';
+// import { createInterface } from 'readline';
 import { appendFileSync } from 'fs';
+import prompt from 'prompt';
+import { createObjectCsvWriter } from 'csv-writer';
+
+const csvWriter = createObjectCsvWriter({
+  path: './output/contacts.csv',
+  append: true,
+  header: [
+    { id: 'name', title: 'NAME' },
+    { id: 'number', title: 'NUMBER' },
+    { id: 'email', title: 'EMAIL' }
+  ]
+});
 
 class Person {
   constructor(name = '', number = '', email = '') {
@@ -9,38 +21,43 @@ class Person {
     this.email = email;
   }
   saveToCSV() {
-    const content = `${this.name},${this.number},${this.email}\n`;
     try {
-      appendFileSync('./output/contacts.csv', content);
-      console.log(`${this.name} Saved!`);
+      const { name, number, email } = this;
+      csvWriter.writeRecords([{ name, number, email }]);
+      console.log(`${name} Saved!`);
     } catch (err) {
       console.error(err);
     }
   }
 }
 
-const readline = createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
-const readLineAsync = (message) => {
-  return new Promise((resolve) => {
-    readline.question(message, (answer) => {
-      resolve(answer);
-    });
-  });
-};
+prompt.start();
+prompt.message = '';
 
 const startApp = async () => {
   const person = new Person();
-  person.name = await readLineAsync('Contact Name: ');
-  person.number = await readLineAsync('Contact Number: ');
-  person.email = await readLineAsync('Contact Email: ');
+  const responses = await prompt.get([
+    {
+      name: 'name',
+      description: 'Contact Name'
+    },
+    {
+      name: 'number',
+      description: 'Contact Number'
+    },
+    {
+      name: 'email',
+      description: 'Contact email'
+    }
+  ]);
+  Object.assign(person, responses);
   person.saveToCSV();
-  const response = await readLineAsync('Continue? [y to continue]: ');
-  if (response === 'y') await startApp();
-  else readline.close();
+  const { again } = await prompt.get([
+    {
+      name: 'again',
+      description: 'Add another contact? [y to add another]'
+    }
+  ]);
 };
 
 startApp();
