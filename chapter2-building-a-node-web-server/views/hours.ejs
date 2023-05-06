@@ -1,0 +1,20 @@
+<h1>Our Hours</h1>
+  <% for(let day of days) { %> 
+  <% const hoursObj = (workingHours[day] === null) ?
+null : (workingHours[day] || workingHours['default']) %>
+<section style="display: inline-flex; flex-direction: column; padding: 5px">
+  <h2><%= day.toUpperCase() %></h2>
+  <div>
+    <% if (hoursObj && hoursObj.open) {%> 
+      <% const formattedOpen = hoursObj.open % 12 || 12 %> 
+      <% const openSuffix = (hoursObj.open < 12) ? "AM" : "PM" %> 
+      <% const formattedClosed = hoursObj.closed % 12 || 12 %> 
+      <% const closedSuffix = (hoursObj.closed < 12) ? "AM" : "PM" %>
+      <p>Open: <%= formattedOpen + ":00 " + openSuffix %></p>
+      <p>Closed: <%= formattedClosed + ":00 " + closedSuffix %></p>
+    <% } else {%> 
+      CLOSED 
+    <% } %>
+  </div>
+</section>  
+<% }%>
