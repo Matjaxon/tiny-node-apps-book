@@ -1,0 +1,16 @@
+{
+  "name": "password_manager",
+  "version": "1.0.0",
+  "description": "A Node app for storing passwords",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matt Jackson",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "5.1.0",
+    "prompt-sync": "4.2.0"
+  }
+}
