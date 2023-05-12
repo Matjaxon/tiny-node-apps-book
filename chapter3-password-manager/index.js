@@ -1,18 +1,21 @@
 import bcrypt from 'bcrypt';
 import promptModule from 'prompt-sync';
+import { MongoClient } from 'mongodb';
 
 const prompt = promptModule();
-const mockDB = { passwords: {} };
+let hasPasswords = false;
+const client = new MongoClient('mongodb://localhost:27017');
+const dbName = 'passwordManager';
 
-const saveNewPassword = (password) => {
+const saveNewPassword = async (password) => {
   const hash = bcrypt.hashSync(password, 10);
-  mockDB.hash = hash;
+  await authCollection.insertOne({ type: 'auth', hash });
   console.log('Password has been saved!');
   showMenu();
 };
 
 const compareHashedPassword = async (password) => {
-  const { hash } = mockDB;
+  const { hash } = await authCollection.findOne({ type: 'auth' });
   return await bcrypt.compare(password, hash);
 };
 
@@ -33,7 +36,7 @@ const promptOldPassword = async () => {
   }
 };
 
-const showMenu = () => {
+const showMenu = async () => {
   console.log(`
   1. View passwords
   2. Manage new passwords
@@ -42,9 +45,9 @@ const showMenu = () => {
   `);
   const response = prompt('>');
 
-  if (response === '1') viewPasswords();
-  else if (response === '2') promptNewManagePassword();
-  else if (response === '3') promptOldPassword();
+  if (response === '1') await viewPasswords();
+  else if (response === '2') await promptNewManagePassword();
+  else if (response === '3') await promptOldPassword();
   else if (response === '4') process.exit();
   else {
     console.log(`That is an invalid response.`);
@@ -52,22 +55,44 @@ const showMenu = () => {
   }
 };
 
-const viewPasswords = () => {
-  const { passwords } = mockDB;
+const viewPasswords = async () => {
+  const passwords = await passwordsCollection.find({}).toArray();
+  console.log(passwords);
   Object.entries(passwords).forEach(([key, value], index) => {
     console.log(`${index + 1}. ${key} => ${value}`);
   });
   showMenu();
 };
 
-const promptNewManagePassword = () => {
+const promptNewManagePassword = async () => {
   const source = prompt('Enter name for password: ');
   const password = prompt('Enter password to save: ');
 
-  mockDB.passwords[source] = password;
+  await passwordsCollection.findOneAndUpdate(
+    { source },
+    { $set: { password } },
+    {
+      returnNewDocument: true,
+      upsert: true
+    }
+  );
   console.log(`Password for ${source} has been saved!`);
   showMenu();
 };
 
-if (!mockDB.hash) promptNewPassword();
+const main = async () => {
+  await client.connect();
+  console.log('Connected successfully to server');
+  const db = client.db(dbName);
+  const authCollection = db.collection('auth');
+  const passwordsCollection = db.collection('passwords');
+  const hashedPassword = await authCollection.findOne({
+    type: 'auth'
+  });
+  hasPasswords = !!hashedPassword;
+  return [passwordsCollection, authCollection];
+};
+
+const [passwordsCollection, authCollection] = await main();
+if (!hasPasswords) promptNewPassword();
 else promptOldPassword();
