@@ -1,10 +1,12 @@
 import { Router } from 'express';
+import Book from '../models/book.js';
+
 const booksRouter = Router();
 
 booksRouter.get('/:id', async (req, res, next) => {
   const { id } = req.params;
   try {
-    const book = { id };
+    const book = await Book.findByPk(id);
     res.json(book);
   } catch (e) {
     console.error('Error occurred: ', e.message);
@@ -15,7 +17,9 @@ booksRouter.get('/:id', async (req, res, next) => {
 booksRouter.delete('/:id', async (req, res, next) => {
   const { id } = req.params;
   try {
-    const book = { id };
+    const book = await Book.destroy({
+      where: { id }
+    });
     res.json(book);
   } catch (e) {
     console.error('Error occurred: ', e.message);
@@ -24,9 +28,15 @@ booksRouter.delete('/:id', async (req, res, next) => {
 });
 
 booksRouter.put('/:id', async (req, res, next) => {
+  const { title, author } = req.body;
   const { id } = req.params;
   try {
-    const book = { id };
+    const book = Book.update(
+      { title, author },
+      {
+        where: { id }
+      }
+    );
     res.json(book);
   } catch (e) {
     console.error('Error occurred: ', e.message);
@@ -37,7 +47,7 @@ booksRouter.put('/:id', async (req, res, next) => {
 booksRouter.post('/', async (req, res, next) => {
   const { title, author } = req.body;
   try {
-    const book = { title, author };
+    const book = await Book.create({ title, author });
     res.json(book);
   } catch (e) {
     console.error('Error occurred: ', e.message);
