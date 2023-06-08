@@ -24,11 +24,11 @@ const aggregate = (responses, feedItems) => {
 
 const print = (feedItems) => {
   console.clear();
+  const res = prompt('Add item: ');
   const [title, link] = res.split(',');
   if (![title, link].includes(undefined)) customItems.push({ title, link });
   console.table(feedItems.concat(customItems));
   console.log('Last Updated: ', new Date().toUTCString());
-  const res = prompt('Add item: ');
 };
 
 const main = async () => {
